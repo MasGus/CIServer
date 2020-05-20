@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<head>
+    <title>Bisection Processing Info</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <span>Bisection status: </span>
+    <span th:if="${isFinished}">finished</span>
+    <span th:unless="${isFinished}">processing</span>
+    <span th:text="${result}"></span>
+    <span th:text="${exception}"></span>
+</body>
+</html>
