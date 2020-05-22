@@ -1,13 +1,33 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Bisection Processing Info</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>CI Server</title>
+    <link rel="stylesheet" href="webjars/bootstrap/4.5.0/css/bootstrap.min.css" />
 </head>
-<body>
-    <span>Bisection status: </span>
-    <span th:if="${isFinished}">finished</span>
-    <span th:unless="${isFinished}">processing</span>
-    <span th:text="${result}"></span>
-    <span th:text="${exception}"></span>
+<body class="bg-light">
+    <main role="main" class="container">
+        <div class="my-3 p-3 bg-white rounded box-shadow">
+            <h4 class="border-bottom border-gray pb-2 mb-0">Bisection information</h4>
+            <p style="padding-top: 10px;" th:if="${repoPath != null and branchName != null}">
+                Bisection was started for branch <em><strong>[[${branchName}]]</strong></em>
+                in repository <em><strong>[[${repoPath}]]</strong></em>
+            </p>
+            <p style="padding-top: 10px;" th:unless ="${repoPath != null and branchName != null}">
+                Please update this page again. Bisection was not started yet - no useful information.
+            </p>
+            <p th:if="${status != null}" th:text="'Status: ' + ${status}" />
+            <p th:if="${result != null}">
+                Result: [[${result}]]. <br>
+                After fixing this commit please set tag with updated civ# (civ - ci version) for marking last good commit. <br>
+            </p>
+            <p th:if="${lastBranchTag != null}">
+                The last civ tag is [[${lastBranchTag}]].
+            </p>
+            <p th:if="${exception != null}" th:text="'Service was failed with exception: ' + ${result}.
+                Please look for more information in application log." />
+        </div>
+    </main>
 </body>
 </html>

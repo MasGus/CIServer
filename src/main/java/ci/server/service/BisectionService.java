@@ -1,9 +1,8 @@
 package ci.server.service;
 
-import ci.server.exception.CommandException;
+import ci.server.entity.BisectionStatus;
 import ci.server.api.GitApi;
 import ci.server.api.GitApiCmdImpl;
-import ci.server.exception.GitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -15,12 +14,17 @@ import java.util.regex.Pattern;
 @Component
 public class BisectionService {
     public final File RUN_DIR = new File(".");
-    public boolean isFinished = false;
-    public String result = "";
-    public String exception = "";
+    public BisectionStatus status = BisectionStatus.processing;
+    public String repoPath;
+    public String branchName;
+    public String result;
+    public String lastBranchTag;
+    public String exception;
     private static final Logger logger = LoggerFactory.getLogger(BisectionService.class);
 
     public void bisectionProcess(String repoPath, String branchName, String buildPath) {
+        this.repoPath = repoPath;
+        this.branchName = branchName;
         Pattern repoPattern = Pattern.compile("/(\\w+).git");
         Matcher repoMatcher = repoPattern.matcher(repoPath);
         if(!repoMatcher.find()) {
@@ -36,18 +40,16 @@ public class BisectionService {
 //            gitApi.clone(RUN_DIR, repoPath);
             gitApi.fetch(repoDir, branchName);
             gitApi.checkout(repoDir, branchName);
-//            String lastBranchTag = gitApi.getLastBranchTag(repoDir, branchName);
-//            gitApi.startBisect(repoDir, lastBranchTag);
-            gitApi.startBisect(repoDir, "9844179f941fc5dd2a5880f75ba66358e878ab55");
+            String lastBranchTag = gitApi.getLastBranchTag(repoDir, branchName);
+            gitApi.startBisect(repoDir, !lastBranchTag.isEmpty() ? lastBranchTag : gitApi.getFirstCommit(repoDir));
             String runBisectResponse = gitApi.runBisect(repoDir, buildPath);
-            result = runBisectResponse;
-            isFinished = true;
+            status = BisectionStatus.finished;
             Pattern badCommitPattern = Pattern.compile("(\\w+) is the first bad commit");
             Matcher badCommitMatcher = badCommitPattern.matcher(runBisectResponse);
             if(badCommitMatcher.find()) {
                result = badCommitMatcher.group(0);
             } else {
-                result = "There are no bad commits";
+                result = "There are no bad commits. Please look for more information in application log.";
             }
             gitApi.resetBisect(repoDir);
         } catch (Exception e) {

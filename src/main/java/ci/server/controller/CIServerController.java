@@ -13,9 +13,12 @@ public class CIServerController {
 
     @GetMapping("/bisectionInfo")
     public String getBisectionInfo(Model model) {
-        model.addAttribute("isFinished", bisectionService.isFinished);
+        model.addAttribute("status", bisectionService.status);
         model.addAttribute("result", bisectionService.result);
+        model.addAttribute("lastBranchTag", bisectionService.lastBranchTag);
         model.addAttribute("exception", bisectionService.exception);
+        model.addAttribute("repoPath", bisectionService.repoPath);
+        model.addAttribute("branchName", bisectionService.branchName);
         return "bisectionInfo";
     }
 }
