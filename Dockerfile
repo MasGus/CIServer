@@ -1,4 +1,4 @@
-FROM ubuntu as intermediate
+FROM ubuntu:18.04
 
 # install git
 RUN apt-get update
@@ -10,9 +10,9 @@ RUN mkdir /root/.ssh/
 RUN echo "${ssh_prv_key}" > /root/.ssh/id_rsa
 
 FROM openjdk:8-jdk-alpine
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+WORKDIR /usr/app/
+COPY ./target/CIServer-1.0-SNAPSHOT.jar /usr/app
+ENTRYPOINT ["java","-jar","CIServer-1.0-SNAPSHOT.jar"]
 
 
 

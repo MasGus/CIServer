@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
 
 @Component
 public class BisectionService {
-    public final File RUN_DIR = new File(".");
+    public final String RUN_DIR = System.getProperty("user.dir");
+    public final File RUN_DIR_FILE = new File(RUN_DIR);
     public BisectionStatus status = BisectionStatus.processing;
     public String repoPath;
     public String branchName;
@@ -35,9 +36,9 @@ public class BisectionService {
 
         CommandService commandService = new CommandService();
         GitApi gitApi = new GitApiCmdImpl(commandService);
-        File repoDir = new File("./" + repoName);
+        File repoDir = new File(RUN_DIR + File.separator + repoName);
         try {
-            gitApi.clone(RUN_DIR, repoPath);
+            gitApi.clone(RUN_DIR_FILE, repoPath);
             gitApi.fetch(repoDir, branchName);
             gitApi.checkout(repoDir, branchName);
             String lastBranchTag = gitApi.getLastBranchTag(repoDir, branchName);
