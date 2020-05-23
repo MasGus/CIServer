@@ -1,18 +1,12 @@
-FROM ubuntu:18.04
+FROM openjdk:8-jdk-alpine
 
 # install git
-RUN apt-get update
-RUN apt-get install -y git
+RUN apk update && apk upgrade
+RUN apk add git
+RUN apk --update add openssh-client
+RUN adduser -D testuser
+USER testuser
 
-# add credentials on build
-ARG SSH_PRIVATE_KEY
-RUN mkdir /root/.ssh/
-RUN echo "${ssh_prv_key}" > /root/.ssh/id_rsa
-
-FROM openjdk:8-jdk-alpine
-WORKDIR /usr/app/
-COPY ./target/CIServer-1.0-SNAPSHOT.jar /usr/app
+WORKDIR /home/testuser/
+COPY ./target/CIServer-1.0-SNAPSHOT.jar /home/testuser
 ENTRYPOINT ["java","-jar","CIServer-1.0-SNAPSHOT.jar"]
-
-
-
