@@ -1,6 +1,5 @@
 package ci.server;
 
-import ci.server.exception.CommandException;
 import ci.server.service.BisectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,7 @@ public class Application implements ApplicationRunner {
         SpringApplication.run(Application.class, args);
     }
 
-    public void run(ApplicationArguments args) throws CommandException {
+    public void run(ApplicationArguments args) {
         if (args.getSourceArgs().length != 3) {
             logger.error("Wrong number of parameters. " +
                     "Please use enter these parameters: git repository path, branch name and build script path");

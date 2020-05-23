@@ -37,7 +37,7 @@ public class BisectionService {
         GitApi gitApi = new GitApiCmdImpl(commandService);
         File repoDir = new File("./" + repoName);
         try {
-//            gitApi.clone(RUN_DIR, repoPath);
+            gitApi.clone(RUN_DIR, repoPath);
             gitApi.fetch(repoDir, branchName);
             gitApi.checkout(repoDir, branchName);
             String lastBranchTag = gitApi.getLastBranchTag(repoDir, branchName);
