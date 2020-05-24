@@ -16,9 +16,9 @@ public class CommandService {
             Process process = pb.start();
             try (InputStream stream = process.getInputStream()) {
                 byte[] data = IOUtils.toByteArray(stream);
-                boolean exited = process.waitFor(10, TimeUnit.SECONDS);
+                process.waitFor();
                 int exitValue = process.exitValue();
-                if (!exited || exitValue != 0) {
+                if (exitValue != 0) {
                     throw new CommandException("Return code is " + exitValue + ", value = " + new String(data));
                 }
                 return data;
