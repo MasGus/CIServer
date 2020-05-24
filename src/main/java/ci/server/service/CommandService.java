@@ -1,12 +1,10 @@
 package ci.server.service;
 
 import ci.server.exception.CommandException;
-import ci.server.exception.CommandFailureException;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class CommandService {
@@ -20,10 +18,8 @@ public class CommandService {
                 byte[] data = IOUtils.toByteArray(stream);
                 boolean exited = process.waitFor(10, TimeUnit.SECONDS);
                 int exitValue = process.exitValue();
-                if (!exited) {
+                if (!exited || exitValue != 0) {
                     throw new CommandException("Return code is " + exitValue + ", value = " + new String(data));
-                } else if (exitValue != 0) {
-                    throw new CommandFailureException("Return code is " + exitValue + ", value = " + new String(data));
                 }
                 return data;
             }

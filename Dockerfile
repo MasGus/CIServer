@@ -1,9 +1,6 @@
 FROM openjdk:8-jdk-alpine
 
-# install git
-RUN apk update && apk upgrade
-RUN apk add git
-RUN apk --update add openssh-client
+RUN apk update && apk upgrade && apk add git && apk add openssh-client
 RUN adduser -D testuser
 USER testuser
 
