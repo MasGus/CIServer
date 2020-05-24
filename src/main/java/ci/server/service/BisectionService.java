@@ -2,30 +2,35 @@ package ci.server.service;
 
 import ci.server.entity.BisectionStatus;
 import ci.server.api.GitApi;
-import ci.server.api.GitApiCmdImpl;
 import ci.server.exception.GitException;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Getter
 @Component
 public class BisectionService {
-    public final String RUN_DIR = System.getProperty("user.dir");
-    public final File RUN_DIR_FILE = new File(RUN_DIR);
-    public BisectionStatus status = BisectionStatus.processing;
-    public String repoPath;
-    public String branchName;
-    public String result;
-    public String bisectStartedCommit;
-    public Long commitCount;
-    public String exception;
-    public Long startedTime;
-    public boolean isBadCommitReverted;
     private static final Logger logger = LoggerFactory.getLogger(BisectionService.class);
+    public static final String RUN_DIR = System.getProperty("user.dir");
+    public static final File RUN_DIR_FILE = new File(RUN_DIR);
+    private BisectionStatus status = BisectionStatus.processing;
+    private String repoPath;
+    private String branchName;
+    private String result;
+    private String bisectStartedCommit;
+    private Long commitCount;
+    private String exception;
+    private Long startedTime;
+    private boolean isBadCommitReverted;
+
+    @Autowired
+    private GitApi gitApi;
 
     public void bisectionProcess(String repoPath, String branchName, String buildPath) {
         this.repoPath = repoPath;
@@ -38,14 +43,12 @@ public class BisectionService {
             return;
         }
         String repoName = repoMatcher.group(1);
-
-        CommandService commandService = new CommandService();
-        GitApi gitApi = new GitApiCmdImpl(commandService);
         File repoDir = new File(RUN_DIR + File.separator + repoName);
         try {
             gitApi.clone(RUN_DIR_FILE, repoPath);
             gitApi.checkout(repoDir, branchName);
-            String startBisectResponse = gitApi.startBisect(repoDir, gitApi.getFirstCommit(repoDir));
+            this.bisectStartedCommit = gitApi.getFirstCommit(repoDir);
+            String startBisectResponse = gitApi.startBisect(repoDir, bisectStartedCommit);
             Pattern countCommitPattern = Pattern.compile("roughly (\\d+) step");
             Matcher countCommitMather = countCommitPattern.matcher(startBisectResponse);
             if(countCommitMather.find()) {
@@ -58,14 +61,7 @@ public class BisectionService {
             gitApi.resetBisect(repoDir);
             if(badCommitMatcher.find()) {
                 this.result = badCommitMatcher.group(0);
-                try {
-                    gitApi.revertCommit(repoDir, badCommitMatcher.group(1));
-                    gitApi.push(repoDir);
-                    this.isBadCommitReverted = true;
-                } catch (GitException e) {
-                    this.exception = e.getMessage();
-                    gitApi.abortRevert(repoDir);
-                }
+                revertCommit(repoDir, badCommitMatcher.group(1));
 
             } else {
                 this.result = "There are no bad commits. Please look for more information in application log.";
@@ -73,6 +69,17 @@ public class BisectionService {
         } catch (Exception e) {
             this.exception = e.getMessage();
             this.status = BisectionStatus.failed;
+        }
+    }
+
+    private void revertCommit(File directory, String commit) throws GitException {
+        try {
+            gitApi.revertCommit(directory, commit);
+            gitApi.push(directory);
+            this.isBadCommitReverted = true;
+        } catch (GitException e) {
+            this.exception = e.getMessage();
+            gitApi.abortRevert(directory);
         }
     }
 }

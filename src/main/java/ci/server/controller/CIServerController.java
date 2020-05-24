@@ -14,20 +14,20 @@ public class CIServerController {
 
     @GetMapping("/bisectionInfo")
     public String getBisectionInfo(Model model) {
-        model.addAttribute("status", bisectionService.status);
-        model.addAttribute("result", bisectionService.result);
-        model.addAttribute("bisectStartedCommit", bisectionService.bisectStartedCommit);
-        model.addAttribute("commitCount", bisectionService.commitCount);
+        model.addAttribute("status", bisectionService.getStatus());
+        model.addAttribute("result", bisectionService.getResult());
+        model.addAttribute("bisectStartedCommit", bisectionService.getBisectStartedCommit());
+        model.addAttribute("commitCount", bisectionService.getCommitCount());
         Long timeLeft = null;
-        if (bisectionService.commitCount != null && bisectionService.startedTime != null) {
-            timeLeft = bisectionService.commitCount * 5 - (System.currentTimeMillis() - bisectionService.startedTime) / 60000;
+        if (bisectionService.getCommitCount() != null && bisectionService.getStartedTime() != null) {
+            timeLeft = bisectionService.getCommitCount() * 5 - (System.currentTimeMillis() - bisectionService.getStartedTime()) / 60000;
             timeLeft = timeLeft > 0 ? timeLeft : 1;
         }
-        model.addAttribute("bisectionTimeLeft", !bisectionService.status.equals(BisectionStatus.processing) ? null : timeLeft);
-        model.addAttribute("exception", bisectionService.exception);
-        model.addAttribute("repoPath", bisectionService.repoPath);
-        model.addAttribute("branchName", bisectionService.branchName);
-        model.addAttribute("isBadCommitReverted", bisectionService.isBadCommitReverted);
+        model.addAttribute("bisectionTimeLeft", !bisectionService.getStatus().equals(BisectionStatus.processing) ? null : timeLeft);
+        model.addAttribute("exception", bisectionService.getException());
+        model.addAttribute("repoPath", bisectionService.getRepoPath());
+        model.addAttribute("branchName", bisectionService.getBranchName());
+        model.addAttribute("isBadCommitReverted", bisectionService.isBadCommitReverted());
         return "bisectionInfo";
     }
 }

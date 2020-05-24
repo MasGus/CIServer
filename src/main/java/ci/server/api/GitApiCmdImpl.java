@@ -5,16 +5,16 @@ import ci.server.exception.GitException;
 import ci.server.service.CommandService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 
+@Component
 public class GitApiCmdImpl implements GitApi {
     private static final Logger logger = LoggerFactory.getLogger(GitApiCmdImpl.class);
+    @Autowired
     private CommandService commandService;
-    
-    public GitApiCmdImpl(CommandService commandService) {
-        this.commandService = commandService;
-    }
 
     @Override
     public void clone(File directory, String repoPath) throws GitException {
@@ -74,5 +74,4 @@ public class GitApiCmdImpl implements GitApi {
             throw new GitException(errorMsg, e);
         }
     }
-
 }

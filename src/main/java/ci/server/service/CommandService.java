@@ -2,10 +2,12 @@ package ci.server.service;
 
 import ci.server.exception.CommandException;
 import org.apache.commons.io.IOUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.InputStream;
 
+@Component
 public class CommandService {
     public byte[] runCommand(File directory, String... command) throws CommandException {
         ProcessBuilder pb = new ProcessBuilder(command)
