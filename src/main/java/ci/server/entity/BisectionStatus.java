@@ -1,5 +1,5 @@
 package ci.server.entity;
 
 public enum BisectionStatus {
-    finished, processing
+    finished, processing, failed
 }

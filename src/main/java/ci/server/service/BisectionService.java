@@ -19,13 +19,16 @@ public class BisectionService {
     public String repoPath;
     public String branchName;
     public String result;
-    public String lastBranchTag;
+    public String bisectStartedCommit;
+    public Long commitCount;
     public String exception;
+    public Long startedTime;
     private static final Logger logger = LoggerFactory.getLogger(BisectionService.class);
 
     public void bisectionProcess(String repoPath, String branchName, String buildPath) {
         this.repoPath = repoPath;
         this.branchName = branchName;
+        this.startedTime = System.currentTimeMillis();
         Pattern repoPattern = Pattern.compile("/(\\w+).git");
         Matcher repoMatcher = repoPattern.matcher(repoPath);
         if(!repoMatcher.find()) {
@@ -39,22 +42,26 @@ public class BisectionService {
         File repoDir = new File(RUN_DIR + File.separator + repoName);
         try {
             gitApi.clone(RUN_DIR_FILE, repoPath);
-            gitApi.fetch(repoDir, branchName);
             gitApi.checkout(repoDir, branchName);
-            String lastBranchTag = gitApi.getLastBranchTag(repoDir, branchName);
-            gitApi.startBisect(repoDir, !lastBranchTag.isEmpty() ? lastBranchTag : gitApi.getFirstCommit(repoDir));
+            String startBisectResponse = gitApi.startBisect(repoDir, gitApi.getFirstCommit(repoDir));
+            Pattern countCommitPattern = Pattern.compile("roughly (\\d+) step");
+            Matcher countCommitMather = countCommitPattern.matcher(startBisectResponse);
+            if(countCommitMather.find()) {
+                this.commitCount = Long.valueOf(countCommitMather.group(1));
+            }
             String runBisectResponse = gitApi.runBisect(repoDir, buildPath);
-            status = BisectionStatus.finished;
+            this.status = BisectionStatus.finished;
             Pattern badCommitPattern = Pattern.compile("(\\w+) is the first bad commit");
             Matcher badCommitMatcher = badCommitPattern.matcher(runBisectResponse);
             if(badCommitMatcher.find()) {
-               result = badCommitMatcher.group(0);
+               this.result = badCommitMatcher.group(0);
             } else {
-                result = "There are no bad commits. Please look for more information in application log.";
+                this.result = "There are no bad commits. Please look for more information in application log.";
             }
             gitApi.resetBisect(repoDir);
         } catch (Exception e) {
-            exception = e.getMessage();
+            this.exception = e.getMessage();
+            this.status = BisectionStatus.failed;
         }
     }
 }

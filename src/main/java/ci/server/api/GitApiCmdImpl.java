@@ -23,27 +23,15 @@ public class GitApiCmdImpl implements GitApi {
     }
 
     @Override
-    public void fetch(File directory, String branchName) throws GitException {
-        runCommandHelper("Could not fetch branch",
-                directory, "git", "fetch", "origin", branchName);
-    }
-
-    @Override
     public void checkout(File directory, String branchName) throws GitException {
         runCommandHelper("Could not checkout branch",
                 directory, "git", "checkout", branchName);
     }
 
     @Override
-    public void pull(File directory, String branchName) throws GitException {
-        runCommandHelper("Could not pull branch",
-                directory, "git", "pull", "origin", branchName);
-    }
-
-    @Override
-    public void startBisect(File directory, String version) throws GitException {
-        runCommandHelper("Could not start bisection",
-                directory, "git", "bisect", "start", "HEAD", version);
+    public String startBisect(File directory, String version) throws GitException {
+        return new String(runCommandHelper("Could not start bisection",
+                directory, "git", "bisect", "start", "HEAD", version));
     }
 
     @Override
@@ -58,16 +46,9 @@ public class GitApiCmdImpl implements GitApi {
     }
 
     @Override
-    public String getLastBranchTag(File directory, String branchName) throws GitException {
-        return new String(runCommandHelper("Could not get last branch tag",
-                directory, "git", "tag", "--merged", branchName, "|", "grep",
-                VERSION_TAG_PREFIX, "|", "sort", "-r", "|", "head", "-n", "1"));
-    }
-
-    @Override
     public String getFirstCommit(File directory) throws GitException {
         return new String(runCommandHelper("Could not get first commit",
-                directory,"git", "rev-list", "--max-parents=0", "HEAD"));
+                directory,"git", "rev-list", "--max-parents=0", "HEAD")).trim();
     }
 
     public byte[] runCommandHelper(String errorMsg, File directory, String... command) throws GitException {

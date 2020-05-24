@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 public class CommandService {
     public byte[] runCommand(File directory, String... command) throws CommandException {
-        System.out.println(directory.toString() + "   " + Arrays.toString(command));
         ProcessBuilder pb = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .directory(directory);

@@ -12,21 +12,26 @@
             <h4 class="border-bottom border-gray pb-2 mb-0">Bisection information</h4>
             <p style="padding-top: 10px;" th:if="${repoPath != null and branchName != null}">
                 Bisection was started for branch <em><strong>[[${branchName}]]</strong></em>
-                in repository <em><strong>[[${repoPath}]]</strong></em>
+                in repository <em><strong>[[${repoPath}]]</strong></em>.
             </p>
             <p style="padding-top: 10px;" th:unless ="${repoPath != null and branchName != null}">
                 Please update this page again. Bisection was not started yet - no useful information.
             </p>
+            <p th:if="${bisectStartedCommit != null}">
+                Last known good commit before bisection process is <em><strong>[[${bisectStartedCommit}]]</strong></em>.
+            </p>
+            <p th:if="${commitCount != null}">
+                Rough number of commits to check is <em><strong>[[${commitCount}]]</strong></em>.
+            </p>
+
+            <p th:if="${bisectionTimeLeft != null}">
+                Estimated remaining time is <em><strong>[[${bisectionTimeLeft}]]</strong></em> mins.
+            </p>
             <p th:if="${status != null}" th:text="'Status: ' + ${status}" />
-            <p th:if="${result != null}">
-                Result: [[${result}]]. <br>
-                After fixing this commit please set tag with updated civ# (civ - ci version) for marking last good commit. <br>
+            <p th:if="${result != null}" th:text="'Result: ' + ${result}" />
+            <p th:if="${exception != null}">
+                Service was failed with exception: [[${exception}]]. Please look for more information in application log.
             </p>
-            <p th:if="${lastBranchTag != null}">
-                The last civ tag is [[${lastBranchTag}]].
-            </p>
-            <p th:if="${exception != null}" th:text="'Service was failed with exception: ' + ${result}.
-                Please look for more information in application log." />
         </div>
     </main>
 </body>
