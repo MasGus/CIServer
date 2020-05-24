@@ -16,4 +16,10 @@ public interface GitApi {
     void resetBisect(File directory) throws GitException;
 
     String getFirstCommit(File directory) throws GitException;
+
+    void revertCommit(File directory, String commit) throws GitException;
+
+    void abortRevert(File directory) throws GitException;
+
+    void push(File directory) throws GitException;
 }

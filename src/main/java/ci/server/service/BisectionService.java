@@ -3,6 +3,7 @@ package ci.server.service;
 import ci.server.entity.BisectionStatus;
 import ci.server.api.GitApi;
 import ci.server.api.GitApiCmdImpl;
+import ci.server.exception.GitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ public class BisectionService {
     public Long commitCount;
     public String exception;
     public Long startedTime;
+    public boolean isBadCommitReverted;
     private static final Logger logger = LoggerFactory.getLogger(BisectionService.class);
 
     public void bisectionProcess(String repoPath, String branchName, String buildPath) {
@@ -53,12 +55,21 @@ public class BisectionService {
             this.status = BisectionStatus.finished;
             Pattern badCommitPattern = Pattern.compile("(\\w+) is the first bad commit");
             Matcher badCommitMatcher = badCommitPattern.matcher(runBisectResponse);
+            gitApi.resetBisect(repoDir);
             if(badCommitMatcher.find()) {
-               this.result = badCommitMatcher.group(0);
+                this.result = badCommitMatcher.group(0);
+                try {
+                    gitApi.revertCommit(repoDir, badCommitMatcher.group(1));
+                    gitApi.push(repoDir);
+                    this.isBadCommitReverted = true;
+                } catch (GitException e) {
+                    this.exception = e.getMessage();
+                    gitApi.abortRevert(repoDir);
+                }
+
             } else {
                 this.result = "There are no bad commits. Please look for more information in application log.";
             }
-            gitApi.resetBisect(repoDir);
         } catch (Exception e) {
             this.exception = e.getMessage();
             this.status = BisectionStatus.failed;

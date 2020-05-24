@@ -27,6 +27,7 @@ public class CIServerController {
         model.addAttribute("exception", bisectionService.exception);
         model.addAttribute("repoPath", bisectionService.repoPath);
         model.addAttribute("branchName", bisectionService.branchName);
+        model.addAttribute("isBadCommitReverted", bisectionService.isBadCommitReverted);
         return "bisectionInfo";
     }
 }

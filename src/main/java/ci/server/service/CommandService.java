@@ -5,7 +5,6 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
 
 public class CommandService {
     public byte[] runCommand(File directory, String... command) throws CommandException {

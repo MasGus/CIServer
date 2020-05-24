@@ -51,6 +51,21 @@ public class GitApiCmdImpl implements GitApi {
                 directory,"git", "rev-list", "--max-parents=0", "HEAD")).trim();
     }
 
+    @Override
+    public void revertCommit(File directory, String commit) throws GitException {
+        runCommandHelper("Could not revert commit", directory, "git", "revert", commit, "--no-edit");
+    }
+
+    @Override
+    public void abortRevert(File directory) throws GitException {
+        runCommandHelper("Could not abort revert", directory, "git", "revert", "--abort");
+    }
+
+    @Override
+    public void push(File directory) throws GitException {
+        runCommandHelper("Could not push", directory, "git", "push");
+    }
+
     public byte[] runCommandHelper(String errorMsg, File directory, String... command) throws GitException {
         try {
             return commandService.runCommand(directory, command);

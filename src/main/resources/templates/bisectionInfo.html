@@ -29,6 +29,7 @@
             </p>
             <p th:if="${status != null}" th:text="'Status: ' + ${status}" />
             <p th:if="${result != null}" th:text="'Result: ' + ${result}" />
+            <p th:if="${isBadCommitReverted}" th:text="'Bad commit was reverted'" />
             <p th:if="${exception != null}">
                 Service was failed with exception: [[${exception}]]. Please look for more information in application log.
             </p>
