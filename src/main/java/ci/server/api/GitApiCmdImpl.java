@@ -70,7 +70,7 @@ public class GitApiCmdImpl implements GitApi {
         try {
             return commandService.runCommand(directory, command);
         } catch (CommandException e) {
-            logger.error("Command was failed with exception", e);
+            logger.error("{}. Command was failed with exception", errorMsg, e);
             throw new GitException(errorMsg, e);
         }
     }
