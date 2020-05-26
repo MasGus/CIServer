@@ -13,12 +13,15 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ci.server.exception.ExceptionMessage.NO_BAD_COMMIT;
+import static ci.server.exception.ExceptionMessage.WRONG_REPO_PATH;
+
 @Getter
 @Component
 public class BisectionService {
     private static final Logger logger = LoggerFactory.getLogger(BisectionService.class);
-    public static final String RUN_DIR = System.getProperty("user.dir");
-    public static final File RUN_DIR_FILE = new File(RUN_DIR);
+    private static final String RUN_DIR = System.getProperty("user.dir");
+    private static final File RUN_DIR_FILE = new File(RUN_DIR);
     private BisectionStatus status = BisectionStatus.processing;
     private String repoPath;
     private String branchName;
@@ -39,7 +42,9 @@ public class BisectionService {
         Pattern repoPattern = Pattern.compile("/(\\w+).git");
         Matcher repoMatcher = repoPattern.matcher(repoPath);
         if(!repoMatcher.find()) {
-            logger.error("Wrong repository path");
+            logger.error(WRONG_REPO_PATH);
+            this.exception = WRONG_REPO_PATH;
+            this.status = BisectionStatus.failed;
             return;
         }
         String repoName = repoMatcher.group(1);
@@ -64,7 +69,7 @@ public class BisectionService {
                 revertCommit(repoDir, badCommitMatcher.group(1));
 
             } else {
-                this.result = "There are no bad commits. Please look for more information in application log.";
+                this.result = NO_BAD_COMMIT;
             }
         } catch (Exception e) {
             this.exception = e.getMessage();

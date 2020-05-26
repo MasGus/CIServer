@@ -10,60 +10,63 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 
+import static ci.server.exception.ExceptionMessage.*;
+
 @Component
 public class GitApiCmdImpl implements GitApi {
     private static final Logger logger = LoggerFactory.getLogger(GitApiCmdImpl.class);
+
     @Autowired
     private CommandService commandService;
 
     @Override
     public void clone(File directory, String repoPath) throws GitException {
-        runCommandHelper("Could not clone repository",
+        runCommandHelper(CLONE_FAILED,
                 directory, "git", "clone", repoPath);
     }
 
     @Override
     public void checkout(File directory, String branchName) throws GitException {
-        runCommandHelper("Could not checkout branch",
+        runCommandHelper(CHECKOUT_FAILED,
                 directory, "git", "checkout", branchName);
     }
 
     @Override
     public String startBisect(File directory, String version) throws GitException {
-        return new String(runCommandHelper("Could not start bisection",
+        return new String(runCommandHelper(START_BISECT_FAILED,
                 directory, "git", "bisect", "start", "HEAD", version));
     }
 
     @Override
     public String runBisect(File directory, String buildPath) throws GitException {
-        return new String(runCommandHelper("Could not run bisection",
+        return new String(runCommandHelper(RUN_BISECT_FAILED,
                 directory, "git", "bisect", "run", buildPath));
     }
 
     @Override
     public void resetBisect(File directory) throws GitException {
-        runCommandHelper("Could not reset bisection", directory, "git", "bisect", "reset");
+        runCommandHelper(RESET_BISECT_FAILED, directory, "git", "bisect", "reset");
     }
 
     @Override
     public String getFirstCommit(File directory) throws GitException {
-        return new String(runCommandHelper("Could not get first commit",
+        return new String(runCommandHelper(GET_FIRST_COMMIT_FAILED,
                 directory,"git", "rev-list", "--max-parents=0", "HEAD")).trim();
     }
 
     @Override
     public void revertCommit(File directory, String commit) throws GitException {
-        runCommandHelper("Could not revert commit", directory, "git", "revert", commit, "--no-edit");
+        runCommandHelper(REVERT_FAILED, directory, "git", "revert", commit, "--no-edit");
     }
 
     @Override
     public void abortRevert(File directory) throws GitException {
-        runCommandHelper("Could not abort revert", directory, "git", "revert", "--abort");
+        runCommandHelper(ABORT_REVERT_FAILED, directory, "git", "revert", "--abort");
     }
 
     @Override
     public void push(File directory) throws GitException {
-        runCommandHelper("Could not push", directory, "git", "push");
+        runCommandHelper(PUSH_FAILED, directory, "git", "push");
     }
 
     public byte[] runCommandHelper(String errorMsg, File directory, String... command) throws GitException {

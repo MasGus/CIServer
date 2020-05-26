@@ -1,8 +1,11 @@
 package ci.server.service;
 
 import ci.server.api.GitApi;
+import ci.server.entity.BisectionStatus;
 import ci.server.exception.CommandException;
+import ci.server.exception.ExceptionMessage;
 import ci.server.exception.GitException;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -11,29 +14,40 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static ci.server.service.BisectionService.RUN_DIR;
-import static ci.server.service.BisectionService.RUN_DIR_FILE;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doNothing;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
 @RunWith(SpringRunner.class)
 @Import(AppTestConfiguration.class)
+@DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 public class BisectionServiceTest {
-    private final static String branchName = "master";
-    private final static String testRepoPath = "testRepo";
-    private final static String commitMessage = "test commit";
-    private final static File testRepo = new File(RUN_DIR + File.separator + testRepoPath);
-    private final static String testRepoSshPath = String.format("git@github.com:MasGus/%s.git", testRepoPath);
-    private final String buildPath = new File(this.getClass().getResource("build.cmd").getFile()).getAbsolutePath();
-    private static String badCommit;
-    private static File badFile;
+    private static final String runDir = System.getProperty("user.dir");
+    private static final File runDirFile = new File(runDir);
+    private static final String branchName = "master";
+    private static final String testRepoPath = "testRepo";
+    private static final String commitMessage = "test commit";
+    private static final File testRepo = new File(runDir + File.separator + testRepoPath);
+    private static final String testRepoSshPath = String.format("git@github.com:MasGus/%s.git", testRepoPath);
+    private static final String buildScript = SystemUtils.IS_OS_WINDOWS ? "build.cmd" : "build.sh";
+    private static final String fileNamePattern = "commitFile_%d.txt";
+    private static final int commitCount = 7;
+    private static final int buildScriptBadCommitId = 3;
+    private final String buildPath = new File(this.getClass().getResource(buildScript).getFile()).getAbsolutePath();
+    private final List<String> commits = new ArrayList<>();
 
     @Autowired
     private CommandService commandService;
@@ -48,21 +62,18 @@ public class BisectionServiceTest {
     public void init() throws CommandException, GitException, IOException {
         testRepo.mkdir();
         commandService.runCommand(testRepo, "git", "init");
-        doNothing().when(gitApi).clone(RUN_DIR_FILE, testRepoSshPath);
+        doNothing().when(gitApi).clone(runDirFile, testRepoSshPath);
         doNothing().when(gitApi).push(testRepo);
         Pattern commitPattern = Pattern.compile(String.format("(\\w+)] %s", commitMessage));
-        for (int i = 1; i <= 7; i++) {
-            String fileName = String.format("commitFile_%d.txt", i);
+        for (int i = 0; i <= commitCount; i++) {
+            String fileName = String.format(fileNamePattern, i);
             File commitFile = new File(testRepoPath + File.separator + fileName);
             commitFile.createNewFile();
             commandService.runCommand(testRepo, "git", "add", fileName);
             String commitResponse = new String(commandService.runCommand(testRepo, "git", "commit", "-m", commitMessage));
-            if (i == 3) {
-                Matcher commitMatcher = commitPattern.matcher(commitResponse);
-                commitMatcher.find();
-                badCommit = commitMatcher.group(1);
-                badFile = commitFile;
-            }
+            Matcher commitMatcher = commitPattern.matcher(commitResponse);
+            commitMatcher.find();
+            commits.add(commitMatcher.group(1));
         }
     }
 
@@ -74,11 +85,27 @@ public class BisectionServiceTest {
     @Test
     public void bisectionProcess_shouldFindBadCommit() {
         bisectionService.bisectionProcess(testRepoSshPath, branchName, buildPath);
-        assertFalse(badFile.exists());
-        assertTrue(bisectionService.getResult().startsWith(badCommit));
+        assertFalse(new File(String.format(fileNamePattern, buildScriptBadCommitId)).exists());
+        assertTrue(bisectionService.getResult().startsWith(commits.get(buildScriptBadCommitId)));
         assertTrue(bisectionService.isBadCommitReverted());
         assertEquals(branchName, bisectionService.getBranchName());
         assertEquals(testRepoSshPath, bisectionService.getRepoPath());
         assertNull(bisectionService.getException());
+    }
+
+    @Test
+    public void bisectionProcess_wrongGitPathFormat() {
+        String wrongRepoSshPath = "wrongtestRepo.ssh";
+        bisectionService.bisectionProcess(wrongRepoSshPath, branchName, buildPath);
+        assertEquals(ExceptionMessage.WRONG_REPO_PATH, bisectionService.getException());
+        assertEquals(BisectionStatus.failed, bisectionService.getStatus());
+    }
+
+    @Test
+    public void bisectionProcess_gitCommandFailed() {
+        String fakeBranch = "fakeBranch";
+        bisectionService.bisectionProcess(testRepoSshPath, fakeBranch, buildPath);
+        assertEquals(ExceptionMessage.CHECKOUT_FAILED, bisectionService.getException());
+        assertEquals(BisectionStatus.failed, bisectionService.getStatus());
     }
 }
