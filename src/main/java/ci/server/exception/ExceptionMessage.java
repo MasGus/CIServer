@@ -1,6 +1,8 @@
 package ci.server.exception;
 
 public class ExceptionMessage {
+    private ExceptionMessage() {}
+
     public static final String ABORT_REVERT_FAILED = "Could not abort revert";
     public static final String CHECKOUT_FAILED = "Could not checkout branch";
     public static final String CLONE_FAILED = "Could not clone repository";
