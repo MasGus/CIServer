@@ -19,7 +19,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -65,6 +68,8 @@ public class BisectionServiceTest {
         doNothing().when(gitApi).clone(runDirFile, testRepoSshPath);
         doNothing().when(gitApi).push(testRepo);
         Pattern commitPattern = Pattern.compile(String.format("(\\w+)] %s", commitMessage));
+        File testRepoBuildScript = new File(testRepo + File.separator + buildScript);
+        Files.copy(buildScriptFile.toPath(), testRepoBuildScript.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
         for (int i = 0; i <= commitCount; i++) {
             String fileName = String.format(fileNamePattern, i);
             File commitFile = new File(testRepoPath + File.separator + fileName);
@@ -74,13 +79,6 @@ public class BisectionServiceTest {
             Matcher commitMatcher = commitPattern.matcher(commitResponse);
             commitMatcher.find();
             commits.add(commitMatcher.group(1));
-        }
-
-        File testRepoBuildScript = new File(testRepo + File.separator + buildScript);
-        try {
-            FileUtils.copyFile(buildScriptFile, testRepoBuildScript);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

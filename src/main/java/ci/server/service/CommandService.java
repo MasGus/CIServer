@@ -1,11 +1,11 @@
 package ci.server.service;
 
+import java.io.File;
+import java.io.InputStream;
+
 import ci.server.exception.CommandException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.io.InputStream;
 
 @Component
 public class CommandService {
