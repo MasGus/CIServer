@@ -59,7 +59,7 @@ public class BisectionServiceTest {
     private GitApi gitApi;
 
     @Before
-    public void init() throws CommandException, GitException, IOException {
+    public void setUp() throws CommandException, GitException, IOException {
         testRepo.mkdir();
         commandService.runCommand(testRepo, "git", "init");
         doNothing().when(gitApi).clone(runDirFile, testRepoSshPath);
@@ -78,34 +78,35 @@ public class BisectionServiceTest {
     }
 
     @After
-    public void finalize() throws IOException {
+    public void tearDown() throws IOException {
         FileUtils.forceDelete(testRepo);
     }
 
     @Test
     public void bisectionProcess_shouldFindBadCommit() {
         bisectionService.bisectionProcess(testRepoSshPath, branchName, buildPath);
-        assertFalse(new File(String.format(fileNamePattern, buildScriptBadCommitId)).exists());
-        assertTrue(bisectionService.getResult().startsWith(commits.get(buildScriptBadCommitId)));
-        assertTrue(bisectionService.isBadCommitReverted());
-        assertEquals(branchName, bisectionService.getBranchName());
-        assertEquals(testRepoSshPath, bisectionService.getRepoPath());
-        assertNull(bisectionService.getException());
+        assertFalse("File should be deleted after commit reversion", new File(String.format(fileNamePattern, buildScriptBadCommitId)).exists());
+        assertTrue("Wrong bad commit", bisectionService.getResult().startsWith(commits.get(buildScriptBadCommitId)));
+        assertEquals("Bisection statuses should be equal", BisectionStatus.finished, bisectionService.getStatus());
+        assertTrue("Bad commit should be reverted", bisectionService.isBadCommitReverted());
+        assertEquals("Branch names should be equal", branchName, bisectionService.getBranchName());
+        assertEquals("Repo paths should be equal", testRepoSshPath, bisectionService.getRepoPath());
+        assertNull("Exception should be null", bisectionService.getException());
     }
 
     @Test
     public void bisectionProcess_wrongGitPathFormat() {
         String wrongRepoSshPath = "wrongtestRepo.ssh";
         bisectionService.bisectionProcess(wrongRepoSshPath, branchName, buildPath);
-        assertEquals(ExceptionMessage.WRONG_REPO_PATH, bisectionService.getException());
-        assertEquals(BisectionStatus.failed, bisectionService.getStatus());
+        assertEquals("Exception messages should be equal", ExceptionMessage.WRONG_REPO_PATH, bisectionService.getException());
+        assertEquals("Bisection statuses should be equal", BisectionStatus.failed, bisectionService.getStatus());
     }
 
     @Test
     public void bisectionProcess_gitCommandFailed() {
         String fakeBranch = "fakeBranch";
         bisectionService.bisectionProcess(testRepoSshPath, fakeBranch, buildPath);
-        assertEquals(ExceptionMessage.CHECKOUT_FAILED, bisectionService.getException());
-        assertEquals(BisectionStatus.failed, bisectionService.getStatus());
+        assertEquals("Exception messages should be equal", ExceptionMessage.CHECKOUT_FAILED, bisectionService.getException());
+        assertEquals("Bisection statuses should be equal", BisectionStatus.failed, bisectionService.getStatus());
     }
 }
