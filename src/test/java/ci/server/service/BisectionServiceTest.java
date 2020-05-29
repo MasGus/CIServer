@@ -5,8 +5,8 @@ import ci.server.entity.BisectionStatus;
 import ci.server.exception.CommandException;
 import ci.server.exception.ExceptionMessage;
 import ci.server.exception.GitException;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +46,7 @@ public class BisectionServiceTest {
     private static final String fileNamePattern = "commitFile_%d.txt";
     private static final int commitCount = 7;
     private static final int buildScriptBadCommitId = 3;
-    private final String buildPath = new File(this.getClass().getResource(buildScript).getFile()).getAbsolutePath();
+    private final File buildScriptFile = new File(this.getClass().getResource(buildScript).getFile());
     private final List<String> commits = new ArrayList<>();
 
     @Autowired
@@ -75,6 +75,13 @@ public class BisectionServiceTest {
             commitMatcher.find();
             commits.add(commitMatcher.group(1));
         }
+
+        File testRepoBuildScript = new File(testRepo + File.separator + buildScript);
+        try {
+            FileUtils.copyFile(buildScriptFile, testRepoBuildScript);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @After
@@ -84,7 +91,7 @@ public class BisectionServiceTest {
 
     @Test
     public void bisectionProcess_shouldFindBadCommit() {
-        bisectionService.bisectionProcess(testRepoSshPath, branchName, buildPath);
+        bisectionService.bisectionProcess(testRepoSshPath, branchName, buildScript);
         assertFalse("File should be deleted after commit reversion", new File(String.format(fileNamePattern, buildScriptBadCommitId)).exists());
         assertTrue("Wrong bad commit", bisectionService.getResult().startsWith(commits.get(buildScriptBadCommitId)));
         assertEquals("Bisection statuses should be equal", BisectionStatus.finished, bisectionService.getStatus());
@@ -97,7 +104,7 @@ public class BisectionServiceTest {
     @Test
     public void bisectionProcess_wrongGitPathFormat() {
         String wrongRepoSshPath = "wrongtestRepo.ssh";
-        bisectionService.bisectionProcess(wrongRepoSshPath, branchName, buildPath);
+        bisectionService.bisectionProcess(wrongRepoSshPath, branchName, buildScript);
         assertEquals("Exception messages should be equal", ExceptionMessage.WRONG_REPO_PATH, bisectionService.getException());
         assertEquals("Bisection statuses should be equal", BisectionStatus.failed, bisectionService.getStatus());
     }
@@ -105,7 +112,7 @@ public class BisectionServiceTest {
     @Test
     public void bisectionProcess_gitCommandFailed() {
         String fakeBranch = "fakeBranch";
-        bisectionService.bisectionProcess(testRepoSshPath, fakeBranch, buildPath);
+        bisectionService.bisectionProcess(testRepoSshPath, fakeBranch, buildScript);
         assertEquals("Exception messages should be equal", ExceptionMessage.CHECKOUT_FAILED, bisectionService.getException());
         assertEquals("Bisection statuses should be equal", BisectionStatus.failed, bisectionService.getStatus());
     }

@@ -59,7 +59,8 @@ public class BisectionService {
             if(countCommitMather.find()) {
                 this.commitCount = Long.valueOf(countCommitMather.group(1));
             }
-            String runBisectResponse = gitApi.runBisect(repoDir, buildPath);
+            String absoluteBuildPath = repoDir + File.separator + buildPath;
+            String runBisectResponse = gitApi.runBisect(repoDir, absoluteBuildPath);
             this.status = BisectionStatus.finished;
             Pattern badCommitPattern = Pattern.compile("(\\w+) is the first bad commit");
             Matcher badCommitMatcher = badCommitPattern.matcher(runBisectResponse);
