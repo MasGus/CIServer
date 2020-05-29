@@ -1,1 +1,1 @@
-docker run -it -p 8080:8080 -v %4:/home/testuser/.ssh -v %3:/home/testuser/build.sh ciserver %1 %2 /home/testuser/build.sh
+docker run -it -p 8080:8080 -v $4:/home/testuser/.ssh -v $3:/home/testuser/build.sh ciserver $1 $2 /home/testuser/build.sh
